@@ -1,9 +1,9 @@
 # UM5 Admin — run on any Docker host (for RouterOS container install see INSTALL-FA.md).
-#   docker load -i images/um5-admin-amd64.tar
+#   docker pull ghcr.io/cybertech1981/um5-admin:1.2.0
 #   docker compose up -d
 services:
   um5-admin:
-    image: um5-admin:1.2.0
+    image: ghcr.io/cybertech1981/um5-admin:1.2.0
     container_name: um5-admin
     restart: unless-stopped
     ports:

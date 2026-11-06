@@ -2,6 +2,9 @@
 
 ![UM5 Admin](docs/banner.png)
 
+**🌐 زبان‌ها:** [English](README.md) · فارسی · [Türkçe](README.tr.md)  
+**📖 راهنمای نصب:** [English](INSTALL.md) · [فارسی](INSTALL-FA.md) · [Türkçe](INSTALL-TR.md)
+
 <div dir="rtl">
 
 پنل مدیریت **چندزبانه (فارسی / انگلیسی / ترکی)** برای **MikroTik User Manager
@@ -14,12 +17,13 @@
 ## محتوای این مخزن
 
 ```
-images/um5-admin-amd64.tar   ایمیج کانتینر (x86_64)
-docker-compose.yml           اجرا روی یک هاست Docker معمولی
-INSTALL-FA.md                اجرا داخل خود RouterOS (راهنمای کامل فارسی)
-TERMS.md                     شرایط استفاده
-docs/                        اسکرین‌شات‌ها
+INSTALL.md / -FA / -TR   اجرا داخل RouterOS به‌صورت کانتینر (انگلیسی / فارسی / ترکی)
+docker-compose.yml       اجرا روی یک هاست Docker معمولی
+TERMS.md                 شرایط استفاده
+docs/                    اسکرین‌شات‌ها
 ```
+
+خودِ ایمیج کانتینر در مخزن نیست — بخش «دریافت ایمیج» را ببینید.
 
 ## تصاویر
 
@@ -44,14 +48,67 @@ docs/                        اسکرین‌شات‌ها
 
 ## اجرا داخل RouterOS (پیشنهادی)
 
-راهنمای کامل در **INSTALL-FA.md** است: نصب پکیج container، شبکهٔ veth/bridge،
-ساخت یک کاربر API محدود، متغیرها و HTTPS اختیاری. خلاصه: فایل
-`images/um5-admin-amd64.tar` را در Files آپلود کنید و یک کانتینر بسازید.
+نصب در ۷ گام زیر است. راهنمای کامل با توضیح هر خط، HTTPS، دسترسی از بیرون و
+عیب‌یابی در **[INSTALL-FA.md](INSTALL-FA.md)** است.
+
+**۱. فعال‌کردن کانتینر (یک‌بار).** پکیج `container` نصب باشد، بعد:
+```
+/system/device-mode/update container=yes
+```
+با **ریبوت سرد** (Power Off/On روی CHR) تأیید کنید.
+
+**۲. کاربر API محدود** (پنل با این وصل می‌شود، نه admin):
+```
+/user/group/add name=um5-api policy=read,write,api,rest-api
+/user/add name=um5-panel group=um5-api address=172.17.0.0/24 password="API-PASS"
+```
+
+**۳. شبکهٔ کانتینر:**
+```
+/interface/veth/add name=veth-um5 address=172.17.0.2/24 gateway=172.17.0.1
+/interface/bridge/add name=containers
+/ip/address/add address=172.17.0.1/24 interface=containers
+/interface/bridge/port/add bridge=containers interface=veth-um5
+/ip/firewall/nat/add chain=srcnat src-address=172.17.0.0/24 action=masquerade
+```
+
+**۴. متغیرها (Environment):**
+```
+/container/envs/add list=um5 key=ROUTER_URL  value="http://172.17.0.1"
+/container/envs/add list=um5 key=ROUTER_USER value="um5-panel"
+/container/envs/add list=um5 key=ROUTER_PASS value="API-PASS"
+/container/envs/add list=um5 key=ADMIN_USER  value="admin"
+/container/envs/add list=um5 key=ADMIN_PASS  value="ADMIN-PASS-8+"
+/container/envs/add list=um5 key=TZ          value="Asia/Tehran"
+/container/envs/add list=um5 key=CURRENCY    value="Toman"
+```
+
+**۵. مانت داده (اپراتورها/ووچرها/رویدادها اینجا می‌مانند):**
+```
+/container/mounts/add name=um5-data src=um5/data dst=/data
+```
+
+**۶. ساخت کانتینر از ghcr.io:**
+```
+/container/config/set registry-url=https://ghcr.io tmpdir=um5/tmp
+/container/add remote-image=ghcr.io/cybertech1981/um5-admin:1.2.0 interface=veth-um5 root-dir=um5/root mountlists=um5-data envlists=um5 name=um5-admin start-on-boot=yes logging=yes
+```
+(یا به‌جای `remote-image`، فایل `um5-admin-amd64.tar` از Releases را با `file=...` بدهید.)
+
+**۷. اجرا و بررسی:**
+```
+/container/print            ;# صبر تا وضعیت = stopped
+/container/start um5-admin
+/log/print where topics~"container"   ;# باید «router OK» ببینید
+```
+با `ADMIN_USER` / `ADMIN_PASS` وارد شوید. بعد رمز مدیر را در پنل عوض و
+`ADMIN_PASS` را حذف کنید:
+`/container/envs/remove [find list=um5 key=ADMIN_PASS]`
 
 ## اجرا روی هاست Docker
 
 ```bash
-docker load -i images/um5-admin-amd64.tar
+docker pull ghcr.io/cybertech1981/um5-admin:1.2.0
 # در docker-compose.yml مقادیر ROUTER_URL / ROUTER_USER / ROUTER_PASS / ADMIN_PASS را بگذارید
 docker compose up -d
 # آدرس http://<host>:8080 را باز کنید
