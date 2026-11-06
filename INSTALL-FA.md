@@ -62,9 +62,18 @@
 
 ---
 
-## ۴. آپلود ایمیج و تنظیمات
+## ۴. دریافت ایمیج و تنظیمات
 
-۱. فایل `um5-admin-amd64.tar` را در WinBox به بخش Files بکشید.
+**ایمیج را به دو روش می‌توانید بدهید — فقط یکی را انتخاب کنید:**
+
+**روش الف) کشیدن مستقیم از ghcr.io (ساده‌تر، نیازی به آپلود فایل نیست).**
+روتر باید به اینترنت و DNS دسترسی داشته باشد. در مرحلهٔ ۴/۴ به‌جای `file=...` از `remote-image=` استفاده می‌کنید:
+```
+/container/config/set registry-url=https://ghcr.io tmpdir=um5/tmp
+```
+(ایمیج عمومی است و به لاگین نیاز ندارد.)
+
+**روش ب) آپلود فایل.** فایل `um5-admin-amd64.tar` را از بخش Releases مخزن بگیرید و در WinBox به بخش Files بکشید.
 
 ۲. متغیرها (مقادیر داخل گیومه را عوض کنید). دقت کنید `ADMIN_USER` **نام کاربری** است و `ADMIN_PASS` **رمز**؛ هر دو باید قبل از اولین اجرا وجود داشته باشند:
 ```
@@ -86,7 +95,10 @@
 
 ۴. ساخت و اجرای کانتینر:
 ```
+# روش ب (فایل آپلودشده):
 /container/add file=um5-admin-amd64.tar interface=veth-um5 root-dir=um5/root envlists=um5 mountlists=um5-data name=um5-admin start-on-boot=yes logging=yes
+# یا روش الف (کشیدن از ghcr.io؛ به‌جای خط بالا):
+/container/add remote-image=ghcr.io/cybertech1981/um5-admin:1.2.0 interface=veth-um5 root-dir=um5/root envlists=um5 mountlists=um5-data name=um5-admin start-on-boot=yes logging=yes
 /container/print
 ```
 در نسخه‌های قدیمی‌تر از 7.20 به‌جای `envlists` بنویسید `envlist`.

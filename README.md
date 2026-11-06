@@ -1,6 +1,6 @@
 # UM5 Admin
 
-![UM5 Admin](docs/dashboard-fa.png)
+![UM5 Admin](docs/banner.png)
 
 Multilingual (**Persian / English / Turkish**) admin panel for **MikroTik User
 Manager v5**. It runs as a single tiny container (a static binary, ~8 MB, no OS
@@ -8,8 +8,6 @@ inside) and manages the router over its **REST API** — create users and vouche
 renew plans, watch sessions, print cards, and read usage and sales reports.
 
 Made by [Amir Echo Tech](https://amirechotech.ca/).
-
-![Dashboard](docs/dashboard-fa.png)
 
 ## What's in this repository
 
@@ -20,6 +18,18 @@ INSTALL-FA.md                run it INSIDE RouterOS as a container (Persian)
 TERMS.md                     terms of use
 docs/                        screenshots
 ```
+
+## Screenshots
+
+| Persian (RTL) | English |
+|---|---|
+| ![Dashboard — Persian](docs/admin-fa.png) | ![Dashboard — English](docs/admin-en.png) |
+
+| Turkish | English — dark |
+|---|---|
+| ![Dashboard — Turkish](docs/admin-tr.png) | ![Dashboard — dark](docs/admin-en-dark.png) |
+
+<img src="docs/admin-tr-mobile.png" width="260" alt="Mobile — Turkish">
 
 ## Get the image
 

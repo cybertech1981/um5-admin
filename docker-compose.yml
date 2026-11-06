@@ -1,0 +1,29 @@
+# UM5 Admin — run on any Docker host (for RouterOS container install see INSTALL-FA.md).
+#   docker load -i images/um5-admin-amd64.tar
+#   docker compose up -d
+services:
+  um5-admin:
+    image: um5-admin:1.2.0
+    container_name: um5-admin
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # --- required: a RouterOS user with REST access ---
+      ROUTER_URL: "http://192.168.88.1"      # your router, reachable from this host
+      ROUTER_USER: "um5-panel"
+      ROUTER_PASS: "change-me-long-random"
+      # --- first run only: creates the first admin, then remove these two ---
+      ADMIN_USER: "admin"
+      ADMIN_PASS: "change-me-8+chars"
+      # --- optional ---
+      CURRENCY: "Toman"
+      PORTAL_URL: "https://your-domain/um/"
+      TZ: "Asia/Tehran"
+      # ROUTER_INSECURE_TLS: "false"         # set when ROUTER_URL is https with a valid cert
+      # TLS_CERT: "/data/tls.crt"            # serve the panel itself over https
+      # TLS_KEY: "/data/tls.key"
+    volumes:
+      - um5-data:/data
+volumes:
+  um5-data:

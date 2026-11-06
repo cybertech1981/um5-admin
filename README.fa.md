@@ -1,6 +1,6 @@
 # پنل ادمین UM5
 
-![UM5 Admin](docs/dashboard-fa.png)
+![UM5 Admin](docs/banner.png)
 
 <div dir="rtl">
 
@@ -11,8 +11,6 @@
 
 ساختهٔ [Amir Echo Tech](https://amirechotech.ca/).
 
-![داشبورد](docs/dashboard-fa.png)
-
 ## محتوای این مخزن
 
 ```
@@ -22,6 +20,18 @@ INSTALL-FA.md                اجرا داخل خود RouterOS (راهنمای �
 TERMS.md                     شرایط استفاده
 docs/                        اسکرین‌شات‌ها
 ```
+
+## تصاویر
+
+| فارسی (راست‌چین) | انگلیسی |
+|---|---|
+| ![داشبورد — فارسی](docs/admin-fa.png) | ![داشبورد — انگلیسی](docs/admin-en.png) |
+
+| ترکی | انگلیسی — حالت تیره |
+|---|---|
+| ![داشبورد — ترکی](docs/admin-tr.png) | ![حالت تیره](docs/admin-en-dark.png) |
+
+<img src="docs/admin-tr-mobile.png" width="260" alt="موبایل — ترکی">
 
 ## دریافت ایمیج
 
