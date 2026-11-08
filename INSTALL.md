@@ -214,14 +214,37 @@ file changes.
 
 ---
 
-## 10) External access
+## 10) External access (VPS / CHR)
 
+On a VPS or CHR the router itself holds the public IP — and it often also runs your
+VPN — so you reach the panel over that public IP (or through the VPN). The container
+sits on a private bridge, so exposing it needs **two** rules: a destination-NAT that
+forwards a public port to the container, and a **forward**-chain accept for that
+traffic.
+
+Forward public port **8080** to the container's 8080:
 ```
-/ip/firewall/nat/add chain=dstnat protocol=tcp dst-port=8443 in-interface-list=WAN action=dst-nat to-addresses=172.17.0.2 to-ports=8080 comment="UM5 Admin"
+/ip/firewall/nat/add chain=dstnat protocol=tcp dst-port=8080 in-interface-list=WAN action=dst-nat to-addresses=172.17.0.2 to-ports=8080 comment="UM5 Admin panel"
+/ip/firewall/filter/add chain=forward protocol=tcp dst-address=172.17.0.2 dst-port=8080 action=accept comment="UM5 Admin panel" place-before=0
 ```
-If your `forward` chain drops by default, add an accept with
-`connection-nat-state=dstnat`. For safety, limit access to known IPs
-(`src-address-list=`). Panel URL: `https://your-domain:8443`
+Panel URL: `http://<router-public-ip>:8080`
+
+- No `WAN` interface list? Use `in-interface=ether1` (your public interface) instead
+  of `in-interface-list=WAN`.
+- With **HTTPS** (step 9), forward a different port to 8080, e.g. 8443:
+  ```
+  /ip/firewall/nat/add chain=dstnat protocol=tcp dst-port=8443 in-interface-list=WAN action=dst-nat to-addresses=172.17.0.2 to-ports=8080 comment="UM5 Admin (https)"
+  ```
+  then open `https://<your-domain>:8443`.
+- **Prefer VPN-only:** instead of exposing it to the whole internet, reach it through
+  your VPN — drop the dst-nat and just allow the VPN subnet to the container:
+  ```
+  /ip/firewall/filter/add chain=forward protocol=tcp src-address=<vpn-subnet> dst-address=172.17.0.2 dst-port=8080 action=accept place-before=0
+  ```
+  then browse to `http://172.17.0.2:8080` over the VPN.
+
+**Security:** anyone who can reach this port can try to log in. Restrict it with
+`src-address=` / `src-address-list=`, prefer HTTPS, and ideally keep it VPN-only.
 
 ---
 

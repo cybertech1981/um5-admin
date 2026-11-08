@@ -196,13 +196,37 @@ router OK: RouterOS 7.23 ...
 
 ---
 
-## ۱۰) دسترسی از بیرون
+## ۱۰) دسترسی از بیرون (VPS / CHR)
 
+روی VPS یا CHR، خودِ روتر IP عمومی دارد — و معمولاً سرویس VPN هم روی آن بالاست — پس
+پنل را از طریق همان IP عمومی (یا از داخل VPN) باز می‌کنی. کانتینر روی یک bridge خصوصی
+است، پس برای دسترسی به آن **دو** قانون لازم است: یک dst-nat که یک پورت عمومی را به
+کانتینر فوروارد کند، و یک accept در زنجیرهٔ **forward** برای همان ترافیک.
+
+فوروارد پورت عمومی **8080** به پورت 8080 کانتینر:
 ```
-/ip/firewall/nat/add chain=dstnat protocol=tcp dst-port=8443 in-interface-list=WAN action=dst-nat to-addresses=172.17.0.2 to-ports=8080 comment="UM5 Admin"
+/ip/firewall/nat/add chain=dstnat protocol=tcp dst-port=8080 in-interface-list=WAN action=dst-nat to-addresses=172.17.0.2 to-ports=8080 comment="UM5 Admin panel"
+/ip/firewall/filter/add chain=forward protocol=tcp dst-address=172.17.0.2 dst-port=8080 action=accept comment="UM5 Admin panel" place-before=0
 ```
-اگر زنجیرهٔ `forward` پیش‌فرض drop می‌کند، یک accept با `connection-nat-state=dstnat` لازم است. برای امنیت بیشتر دسترسی را به IPهای مشخص محدود کنید (`src-address-list=`).
-آدرس پنل: `https://دامنهٔ-شما:8443`
+آدرس پنل: `http://<IP-عمومی-روتر>:8080`
+
+- اگر interface list به نام `WAN` نداری، به‌جای `in-interface-list=WAN` از
+  `in-interface=ether1` (اینترفیس عمومی‌ات) استفاده کن.
+- با **HTTPS** (مرحلهٔ ۹)، یک پورت دیگر را به 8080 فوروارد کن، مثلاً 8443:
+  ```
+  /ip/firewall/nat/add chain=dstnat protocol=tcp dst-port=8443 in-interface-list=WAN action=dst-nat to-addresses=172.17.0.2 to-ports=8080 comment="UM5 Admin (https)"
+  ```
+  بعد `https://<دامنه>:8443` را باز کن.
+- **ترجیحاً فقط از VPN:** به‌جای باز کردن پنل روی کل اینترنت، از طریق VPN به آن وصل شو؛
+  dst-nat را نگذار و فقط اجازهٔ دسترسی ساب‌نت VPN به کانتینر را بده:
+  ```
+  /ip/firewall/filter/add chain=forward protocol=tcp src-address=<ساب‌نت-VPN> dst-address=172.17.0.2 dst-port=8080 action=accept place-before=0
+  ```
+  بعد از داخل VPN آدرس `http://172.17.0.2:8080` را باز کن.
+
+**امنیت:** هر کسی که به این پورت برسد می‌تواند تلاش به ورود کند. با
+`src-address=` / `src-address-list=` محدودش کن، HTTPS را ترجیح بده، و بهتر است فقط
+از طریق VPN در دسترس باشد.
 
 ---
 

@@ -214,14 +214,38 @@ Panel sertifikayı `/data`'dan okur ve dosya değişirse yeniden başlatmadan y�
 
 ---
 
-## 10) Dışarıdan erişim
+## 10) Dışarıdan erişim (VPS / CHR)
 
+VPS veya CHR'de genel IP routerın kendisindedir — ve genelde VPN servisi de onun
+üzerinde çalışır — yani panele o genel IP üzerinden (ya da VPN içinden) erişirsiniz.
+Container özel bir bridge üzerindedir, bu yüzden erişim için **iki** kural gerekir:
+genel bir portu container'a yönlendiren bir dst-nat ve bu trafik için **forward**
+zincirinde bir accept.
+
+Genel **8080** portunu container'ın 8080'ine yönlendirin:
 ```
-/ip/firewall/nat/add chain=dstnat protocol=tcp dst-port=8443 in-interface-list=WAN action=dst-nat to-addresses=172.17.0.2 to-ports=8080 comment="UM5 Admin"
+/ip/firewall/nat/add chain=dstnat protocol=tcp dst-port=8080 in-interface-list=WAN action=dst-nat to-addresses=172.17.0.2 to-ports=8080 comment="UM5 Admin panel"
+/ip/firewall/filter/add chain=forward protocol=tcp dst-address=172.17.0.2 dst-port=8080 action=accept comment="UM5 Admin panel" place-before=0
 ```
-`forward` zinciriniz varsayılan drop ise `connection-nat-state=dstnat` ile bir accept
-ekleyin. Güvenlik için erişimi bilinen IP'lerle sınırlayın (`src-address-list=`).
-Panel adresi: `https://alan-adiniz:8443`
+Panel adresi: `http://<router-genel-ip>:8080`
+
+- `WAN` interface list'iniz yoksa `in-interface-list=WAN` yerine
+  `in-interface=ether1` (genel arayüzünüz) kullanın.
+- **HTTPS** ile (adım 9), 8080'e farklı bir port yönlendirin, örn. 8443:
+  ```
+  /ip/firewall/nat/add chain=dstnat protocol=tcp dst-port=8443 in-interface-list=WAN action=dst-nat to-addresses=172.17.0.2 to-ports=8080 comment="UM5 Admin (https)"
+  ```
+  sonra `https://<alan-adiniz>:8443` açın.
+- **Tercihen yalnızca VPN:** paneli tüm internete açmak yerine VPN üzerinden erişin;
+  dst-nat'ı koymayın, yalnızca VPN alt ağına container'a izin verin:
+  ```
+  /ip/firewall/filter/add chain=forward protocol=tcp src-address=<vpn-alt-agi> dst-address=172.17.0.2 dst-port=8080 action=accept place-before=0
+  ```
+  sonra VPN içinden `http://172.17.0.2:8080` açın.
+
+**Güvenlik:** bu porta erişebilen herkes giriş deneyebilir. `src-address=` /
+`src-address-list=` ile sınırlayın, HTTPS tercih edin ve mümkünse yalnızca VPN
+üzerinden erişilebilir tutun.
 
 ---
 
